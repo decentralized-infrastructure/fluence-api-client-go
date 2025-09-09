@@ -102,3 +102,23 @@ func (c *Client) GetMarketplaceOffers(constraints *OfferConstraints) ([]MarketOf
 	}
 	return offers, nil
 }
+
+// GetDatacenters fetches a list of registered datacenters.
+func (c *Client) GetDatacenters() ([]DatacenterDTO, error) {
+	url := fmt.Sprintf("%s/v1/marketplace/datacenters", c.HostURL)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var datacenters []DatacenterDTO
+	if err := json.Unmarshal(body, &datacenters); err != nil {
+		return nil, err
+	}
+	return datacenters, nil
+}

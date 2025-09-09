@@ -5,12 +5,72 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
 )
+
+// ListVmsV3Params represents the query parameters for ListVmsV3
+type ListVmsV3Params struct {
+	Status       []VirtualMachineStatus `json:"status,omitempty"`
+	DcSlug       *string                `json:"dcSlug,omitempty"`
+	Pagination   *PaginationParams      `json:"pagination,omitempty"`
+	DealStatus   []ExtendedDealStatus   `json:"dealStatus,omitempty"`
+	TerminatedAt *time.Time             `json:"terminatedAt,omitempty"`
+}
 
 // ListVmsV3 fetches all running VM instances (v3).
 func (c *Client) ListVmsV3() ([]RunningInstanceV3, error) {
-	url := fmt.Sprintf("%s/vms/v3", c.HostURL)
-	req, err := http.NewRequest("GET", url, nil)
+	return c.ListVmsV3WithParams(nil)
+}
+
+// ListVmsV3WithParams fetches VM instances with query parameters (v3).
+func (c *Client) ListVmsV3WithParams(params *ListVmsV3Params) ([]RunningInstanceV3, error) {
+	baseURL := fmt.Sprintf("%s/vms/v3", c.HostURL)
+
+	if params != nil {
+		queryParams := url.Values{}
+
+		if len(params.Status) > 0 {
+			statusStrings := make([]string, len(params.Status))
+			for i, status := range params.Status {
+				statusStrings[i] = string(status)
+			}
+			queryParams.Add("status", strings.Join(statusStrings, ","))
+		}
+
+		if params.DcSlug != nil {
+			queryParams.Add("dcSlug", *params.DcSlug)
+		}
+
+		if params.Pagination != nil {
+			if params.Pagination.Page != nil {
+				queryParams.Add("pagination[page]", strconv.FormatInt(*params.Pagination.Page, 10))
+			}
+			if params.Pagination.PerPage != nil {
+				queryParams.Add("pagination[per_page]", strconv.FormatInt(*params.Pagination.PerPage, 10))
+			}
+		}
+
+		if len(params.DealStatus) > 0 {
+			dealStatusStrings := make([]string, len(params.DealStatus))
+			for i, status := range params.DealStatus {
+				dealStatusStrings[i] = string(status)
+			}
+			queryParams.Add("dealStatus", strings.Join(dealStatusStrings, ","))
+		}
+
+		if params.TerminatedAt != nil {
+			queryParams.Add("terminatedAt", params.TerminatedAt.Format(time.RFC3339))
+		}
+
+		if len(queryParams) > 0 {
+			baseURL += "?" + queryParams.Encode()
+		}
+	}
+
+	req, err := http.NewRequest("GET", baseURL, nil)
 	if err != nil {
 		return nil, err
 	}

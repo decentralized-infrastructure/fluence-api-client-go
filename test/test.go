@@ -68,4 +68,43 @@ func main() {
 	} else {
 		fmt.Printf("Available Hardware: %+v\n", hardware)
 	}
+
+	// Get datacenters 
+	fmt.Println("\n=== Testing New Datacenter Endpoint ===")
+	datacenters, err := client.GetDatacenters()
+	if err != nil {
+		fmt.Printf("Error getting datacenters: %v\n", err)
+	} else {
+		fmt.Printf("Found %d datacenters\n", len(datacenters))
+		for i, dc := range datacenters {
+			if i < 3 { // Show first 3 datacenters as examples
+				fmt.Printf("  Datacenter %d: %s-%s (Tier %d, Slug: %s)\n",
+					i+1, dc.CountryCode, dc.CityCode, dc.Tier, dc.Slug)
+			}
+		}
+		if len(datacenters) > 3 {
+			fmt.Printf("  ... and %d more datacenters\n", len(datacenters)-3)
+		}
+	}
+
+	// Test enhanced VM listing with parameters
+	fmt.Println("\n=== Testing Enhanced VM Listing ===")
+	// Test with pagination
+	pagination := &fluenceapi.PaginationParams{
+		Page:    &[]int64{1}[0],
+		PerPage: &[]int64{5}[0],
+	}
+	params := &fluenceapi.ListVmsV3Params{
+		Pagination: pagination,
+	}
+
+	vmsWithParams, err := client.ListVmsV3WithParams(params)
+	if err != nil {
+		fmt.Printf("Error listing VMs with parameters: %v\n", err)
+	} else {
+		fmt.Printf("Found %d VMs (with pagination limit of 5)\n", len(vmsWithParams))
+		if len(vmsWithParams) > 0 {
+			fmt.Printf("  First VM: %s (Status: %s)\n", vmsWithParams[0].Id, vmsWithParams[0].Status)
+		}
+	}
 }

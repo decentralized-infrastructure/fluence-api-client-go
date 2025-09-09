@@ -6,6 +6,9 @@ type String string
 // ChainAddress is a type alias for string, used for blockchain addresses
 type ChainAddress string
 
+// VmId is a type alias for string, representing UUID format for VM IDs
+type VmId string
+
 // ErrorBody represents the error response format
 type ErrorBody struct {
 	Error string `json:"error"`
@@ -105,6 +108,17 @@ type Datacenter struct {
 	Certifications []string `json:"certifications"`
 }
 
+// DatacenterDTO represents a datacenter data transfer object
+type DatacenterDTO struct {
+	Id             String   `json:"id"`
+	CountryCode    string   `json:"countryCode"`
+	CityCode       string   `json:"cityCode"`
+	Index          int64    `json:"index"`
+	Tier           int64    `json:"tier"`
+	Certifications []string `json:"certifications"`
+	Slug           string   `json:"slug"`
+}
+
 // ResourceMetadata is a generic map for metadata (use interface{} for flexibility)
 type ResourceMetadata map[string]interface{}
 
@@ -162,6 +176,7 @@ type OpenPorts struct {
 type CreateVmV3 struct {
 	Constraints     *OfferConstraints `json:"constraints,omitempty"`
 	Instances       int               `json:"instances"`
+	RequestId       *string           `json:"requestId,omitempty"`
 	VmConfiguration VmConfiguration   `json:"vmConfiguration"`
 }
 
@@ -207,6 +222,7 @@ type RunningInstanceV3 struct {
 	ReservedBalance string       `json:"reservedBalance"`
 	TotalSpent      string       `json:"totalSpent"`
 	StatusChangedAt string       `json:"statusChangedAt"`
+	TerminatedAt    string       `json:"terminatedAt"`
 	Datacenter      *Datacenter  `json:"datacenter,omitempty"`
 	OsImage         *string      `json:"osImage,omitempty"`
 	Ports           *[]PortSpec  `json:"ports,omitempty"`
@@ -255,21 +271,23 @@ type EstimatedDepositV3DTO struct {
 
 // VmStatusInfoDTO represents VM status information
 type VmStatusInfoDTO struct {
-	Id              ChainAddress `json:"id"`
-	Status          string       `json:"status"`
-	StatusChangedAt string       `json:"statusChangedAt"`
-	PublicIp        *string      `json:"publicIp,omitempty"`
+	Id              VmId    `json:"id"`
+	Status          string  `json:"status"`
+	StatusChangedAt string  `json:"statusChangedAt"`
+	PublicIp        *string `json:"publicIp,omitempty"`
 }
 
 // Enum constants for various types
 const (
 	// VmStatus enum values
+	VmStatusNew               = "New"
 	VmStatusLaunching         = "Launching"
 	VmStatusActive            = "Active"
 	VmStatusSmallBalance      = "SmallBalance"
 	VmStatusInsufficientFunds = "InsufficientFunds"
 	VmStatusTerminated        = "Terminated"
 	VmStatusStopped           = "Stopped"
+	VmStatusFailed            = "Failed"
 
 	// ResourceType enum values
 	ResourceTypeVCPU             = "VCPU"
@@ -293,3 +311,15 @@ const (
 	ProtocolUDP  = "udp"
 	ProtocolSCTP = "sctp"
 )
+
+// VirtualMachineStatus represents the status of a virtual machine for query parameters
+type VirtualMachineStatus string
+
+// ExtendedDealStatus represents the extended deal status for query parameters
+type ExtendedDealStatus string
+
+// PaginationParams represents pagination parameters
+type PaginationParams struct {
+	Page    *int64 `json:"page,omitempty"`
+	PerPage *int64 `json:"per_page,omitempty"`
+}
